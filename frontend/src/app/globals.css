@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: #123c69;
+    --secondary: #087f8c;
+    --accent: #16a6a1;
+    --dark: #10243a;
+    --text: #34445a;
+    --muted: #718096;
+    --bg: #f4f8fc;
+    --white: #ffffff;
+    --border: #e3ebf3;
+    --green: #16865c;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+.hero-gradient {
+  background: linear-gradient(130deg, #edf6fc 0%, #e5f5f4 100%);
+}
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background-color: #dff4f2;
+  color: #087f8c;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.card-tilt {
+  transform: perspective(1000px) rotate(-2deg);
+  transition: transform 0.3s ease;
+}
+
+.card-tilt:hover {
+  transform: perspective(1000px) rotate(0deg) scale(1.02);
+}
+
+.badge-protected {
+  background-color: #e4f6ed;
+  color: #16865c;
+  font-weight: 700;
+  font-size: 0.6875rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+}
+
+.badge-pending {
+  background-color: #fff3dc;
+  color: #a46a12;
+  font-weight: 700;
+  font-size: 0.6875rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+}
+
+.badge-verified {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  font-weight: 700;
+  font-size: 0.6875rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+}
+
+.badge-settled {
+  background-color: #e3f6ec;
+  color: #16865c;
+  font-weight: 700;
+  font-size: 0.6875rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+}
+
+.badge-rejected {
+  background-color: #feeceb;
+  color: #bd4141;
+  font-weight: 700;
+  font-size: 0.6875rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+}
+
+.badge-redacted {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px dashed #cbd5e1;
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
+}
