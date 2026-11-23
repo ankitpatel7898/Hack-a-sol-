@@ -98,6 +98,8 @@ export interface AuthUser {
   email: string;
   masked_email: string;
   wallet_address?: string;
+  full_name?: string;
+  organization_name?: string;
   profile_pii?: UserProfilePII;
 }
 
@@ -131,6 +133,7 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   access_token: string;
+  refresh_token?: string;
   token_type: string;
   expires_in: number;
   user: AuthUser;

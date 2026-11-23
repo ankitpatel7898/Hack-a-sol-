@@ -30,43 +30,67 @@ DEMO_ACCOUNTS = [
         "role": "patient",
         "email": "patient@healthshield.io",
         "password": "Patient@12345!",
-        "full_name": "Rahul Sharma",
+        "full_name": "Aarav Sharma",
         "wallet_address": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
         "pii": {
             "email_plain": "patient@healthshield.io",
-            "date_of_birth": "1994-05-12",
-            "policy_id": "POL-IND-882190",
+            "date_of_birth": "1997-04-16",
+            "policy_id": "POL-HS-2026-9941",
             "emergency_contact": "+91-9876543210",
-            "health_issues": "Asthma, Mild Hypertension",
-            "mac_address": "00:1A:2B:3C:4D:5E"
+            "phone_number": "+91-9876543210",
+            "health_issues": "Acute Meniscus Tear, Mild Allergic Rhinitis",
+            "mac_address": "00:1A:2B:3C:4D:5E",
+            "coverage_limit": 500000.0,
+            "remaining_balance": 417500.0
+        }
+    },
+    {
+        "role": "patient",
+        "email": "aarav@healthshield.io",
+        "password": "Patient@12345!",
+        "full_name": "Aarav Sharma",
+        "wallet_address": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+        "pii": {
+            "email_plain": "aarav@healthshield.io",
+            "date_of_birth": "1997-04-16",
+            "policy_id": "POL-HS-2026-9941",
+            "emergency_contact": "+91-9876543210",
+            "phone_number": "+91-9876543210",
+            "health_issues": "Acute Meniscus Tear, Mild Allergic Rhinitis",
+            "mac_address": "00:1A:2B:3C:4D:5E",
+            "coverage_limit": 500000.0,
+            "remaining_balance": 417500.0
         }
     },
     {
         "role": "hospital",
         "email": "hospital@healthshield.io",
         "password": "Hospital@12345!",
-        "full_name": "Apollo Hospital Delhi",
-        "wallet_address": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+        "full_name": "Apollo Multispeciality Hospital",
+        "wallet_address": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
         "pii": {
             "email_plain": "hospital@healthshield.io",
-            "hospital_license_id": "HOSP-DEL-401",
-            "department": "Emergency & Critical Care",
+            "hospital_license_id": "HOSP-APL-8821",
+            "hospital_id": "HOSP-APL-8821",
+            "department": "Orthopedics & Joint Reconstruction",
             "mobile_contact": "+91-11-26925858",
-            "mac_address": "B4:2E:99:A1:7C:12"
+            "mac_address": "00:1A:2B:3C:4D:AA"
         }
     },
     {
         "role": "insurer",
         "email": "insurer@healthshield.io",
         "password": "Insurer@12345!",
-        "full_name": "Star Health Insurance",
-        "wallet_address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+        "full_name": "HealthSecure Insurance Ltd.",
+        "wallet_address": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
         "pii": {
             "email_plain": "insurer@healthshield.io",
+            "company_name": "HealthSecure Insurance Ltd.",
+            "officer_name": "Vikram Deshmukh",
+            "officer_id": "INS-4092",
             "insurer_license_code": "INS-LIC-8891",
-            "company_name": "Star Health & Allied Insurance Co.",
             "hotline": "1800-425-2255",
-            "mac_address": "E8:6A:64:1F:3B:88"
+            "mac_address": "00:1A:2B:3C:4D:BB"
         }
     }
 ]

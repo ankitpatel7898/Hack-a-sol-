@@ -144,4 +144,123 @@ export const api = {
   getAuditTrail: async (): Promise<AuditLog[]> => {
     return fetchJson<AuditLog[]>("/api/audit");
   },
+
+  // Multi-Page Real-Time Endpoints
+  getPatientFullVault: async (patientId: string = "pat_rahul_sharma_001"): Promise<{
+    patient: any;
+    records: any[];
+    claims: any[];
+    doctor_visits: any[];
+    prescriptions: any[];
+    login_audits: any[];
+    total_coverage: number;
+    remaining_balance: number;
+  }> => {
+    return fetchJson(`/api/patient/${patientId}/full-vault`);
+  },
+
+  toggleDoctorAccess: async (visitId: string): Promise<{
+    success: boolean;
+    visit_id: string;
+    is_access_granted: boolean;
+  }> => {
+    return fetchJson(`/api/patient/doctors/${visitId}/toggle-access`, {
+      method: "POST",
+    });
+  },
+
+  revokeOtherSessions: async (patientId: string): Promise<{
+    success: boolean;
+    revoked_count: number;
+    message: string;
+  }> => {
+    return fetchJson("/api/patient/sessions/revoke-others", {
+      method: "POST",
+      body: JSON.stringify({ patient_id: patientId }),
+    });
+  },
+
+  getHospitalPatientQueue: async (): Promise<{
+    hospital_name: string;
+    hospital_id: string;
+    patients: any[];
+  }> => {
+    return fetchJson("/api/hospital/patient-queue");
+  },
+
+  passHospitalClaimToInsurer: async (data: {
+    patient_id: string;
+    patient_name: string;
+    policy_id: string;
+    patient_phone: string;
+    assisting_doctor: string;
+    detailed_medical_history: string;
+    clinical_diagnosis: string;
+    itemized_bill_json: string;
+    health_subcategory: string;
+    claimed_amount: number;
+    terms_and_conditions_text: string;
+    is_within_terms: boolean;
+  }): Promise<{
+    success: boolean;
+    claim: any;
+    message: string;
+  }> => {
+    return fetchJson("/api/hospital/claims/pass-to-insurer", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  getInsurerClaimsMetrics: async (): Promise<{
+    metrics: {
+      asked: number;
+      approved: number;
+      passed: number;
+      rejected: number;
+      total: number;
+    };
+  }> => {
+    return fetchJson("/api/insurer/claims/metrics");
+  },
+
+  getInsurerClaimsFiltered: async (status: string = "ASKED"): Promise<{
+    status: string;
+    count: number;
+    claims: any[];
+  }> => {
+    return fetchJson(`/api/insurer/claims/filtered?status=${encodeURIComponent(status)}`);
+  },
+
+  approveInsurerClaim: async (claimId: string): Promise<{
+    success: boolean;
+    claim: any;
+    message: string;
+  }> => {
+    return fetchJson(`/api/insurer/claims/${claimId}/approve`, {
+      method: "POST",
+    });
+  },
+
+  settleInsurerClaimOnchain: async (claimId: string): Promise<{
+    success: boolean;
+    claim: any;
+    tx_hash: string;
+    message: string;
+  }> => {
+    return fetchJson(`/api/insurer/claims/${claimId}/settle-onchain`, {
+      method: "POST",
+    });
+  },
+
+  rejectInsurerClaim: async (claimId: string, reason: string = "Documentation incomplete"): Promise<{
+    success: boolean;
+    claim: any;
+    message: string;
+  }> => {
+    return fetchJson(`/api/insurer/claims/${claimId}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
+  },
 };

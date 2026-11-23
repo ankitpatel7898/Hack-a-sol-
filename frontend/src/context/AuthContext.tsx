@@ -51,6 +51,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUser(parsedUser);
           setCurrentRole(parsedUser.role);
 
+          if (typeof document !== "undefined") {
+            document.cookie = `healthshield_role=${parsedUser.role}; path=/; max-age=604800; SameSite=Lax`;
+            document.cookie = `healthshield_logged_in=true; path=/; max-age=604800; SameSite=Lax`;
+          }
+
           // Verify token silently
           try {
             const res = await fetch(`${API_BASE}/api/auth/me`, {
@@ -85,6 +90,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem("healthshield_user");
     sessionStorage.removeItem("healthshield_token");
     sessionStorage.removeItem("healthshield_user");
+    if (typeof document !== "undefined") {
+      document.cookie = "healthshield_role=; path=/; max-age=0";
+      document.cookie = "healthshield_logged_in=; path=/; max-age=0";
+      document.cookie = "refresh_token=; path=/; max-age=0";
+    }
     setAccessToken(null);
     setUser(null);
     setCurrentRole(null);
@@ -113,6 +123,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const storage = credentials.remember_me ? localStorage : sessionStorage;
       storage.setItem("healthshield_token", authData.access_token);
       storage.setItem("healthshield_user", JSON.stringify(authData.user));
+
+      if (typeof document !== "undefined") {
+        document.cookie = `healthshield_role=${authData.user.role}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `healthshield_logged_in=true; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `refresh_token=${authData.refresh_token || "active"}; path=/; max-age=604800; SameSite=Lax`;
+      }
 
       setAccessToken(authData.access_token);
       setUser(authData.user);
@@ -143,6 +159,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const authData = resData as AuthResponse;
       sessionStorage.setItem("healthshield_token", authData.access_token);
       sessionStorage.setItem("healthshield_user", JSON.stringify(authData.user));
+
+      if (typeof document !== "undefined") {
+        document.cookie = `healthshield_role=${authData.user.role}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `healthshield_logged_in=true; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `refresh_token=${authData.refresh_token || "active"}; path=/; max-age=604800; SameSite=Lax`;
+      }
 
       setAccessToken(authData.access_token);
       setUser(authData.user);
