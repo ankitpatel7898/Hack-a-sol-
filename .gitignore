@@ -1,1 +1,25 @@
-'nnode_modules/
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+
+# Environment
+.env
+
+# Build artifacts
+frontend/.next/
+*.pyc
+
+# Database (local dev)
+*.db
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Package locks (optional)
+package-lock.json

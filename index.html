@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>HealthGuard | Secure Health Insurance</title>
+    <title>HealthGuard | Privacy-Preserving Healthcare Records & ZKP Insurance</title>
 
     <link rel="stylesheet" href="style.css">
 
@@ -19,20 +18,34 @@
 
 <!-- NAVBAR -->
 <nav class="navbar">
-    <div class="logo">
+    <a href="#home" class="logo">
         <i class="fa-solid fa-shield-heart"></i>
         HealthGuard
-    </div>
+    </a>
 
     <div class="nav-links">
         <a href="#home">Home</a>
         <a href="#features">Features</a>
+        <a href="#portals">Portals</a>
         <a href="#about">About</a>
     </div>
 
-    <button class="nav-btn" onclick="scrollToPortals()">
-        Get Started
-    </button>
+    <div class="nav-right">
+        <!-- Live API & Blockchain Status -->
+        <div id="connectionStatus" class="status-pill">
+            <span class="dot" id="statusDot"></span>
+            <span id="connectionText">Checking System...</span>
+        </div>
+
+        <a href="http://localhost:3000" target="_blank" class="nextjs-link" title="Open Next.js App">
+            <i class="fa-solid fa-bolt"></i>
+            Next.js App
+        </a>
+
+        <button class="nav-btn" onclick="scrollToPortals()">
+            Get Started
+        </button>
+    </div>
 </nav>
 
 
@@ -54,7 +67,7 @@
 
         <p>
             A secure healthcare insurance platform powered by
-            Zero-Knowledge Proofs and Blockchain technology.
+            Zero-Knowledge Proofs (Groth16) and Blockchain technology.
             Verify insurance claims without exposing private
             medical information.
         </p>
@@ -103,7 +116,7 @@
 
             <div class="security-status">
                 <i class="fa-solid fa-circle-check"></i>
-                Privacy Protected
+                Privacy Protected by AES-256-GCM
             </div>
 
             <div class="card-bottom">
@@ -122,7 +135,7 @@
 
     <div class="section-heading">
         <span class="tag">OUR TECHNOLOGY</span>
-        <h2>Healthcare Meets <span>Web3</span></h2>
+        <h2>Healthcare Meets <span>Web3 & ZKP</span></h2>
         <p>Smart technology for secure and transparent insurance.</p>
     </div>
 
@@ -131,25 +144,25 @@
         <div class="feature-card">
             <i class="fa-solid fa-user-shield"></i>
             <h3>Data Privacy</h3>
-            <p>Protect sensitive medical information through encrypted storage and controlled access.</p>
+            <p>Protect sensitive medical information through AES-256-GCM encrypted storage and patient-controlled access.</p>
         </div>
 
         <div class="feature-card">
             <i class="fa-solid fa-fingerprint"></i>
             <h3>Zero Knowledge Proof</h3>
-            <p>Prove insurance eligibility without revealing private medical details.</p>
+            <p>Prove insurance eligibility and policy coverage without revealing private medical details via Groth16.</p>
         </div>
 
         <div class="feature-card">
             <i class="fa-brands fa-ethereum"></i>
             <h3>Blockchain Security</h3>
-            <p>Maintain transparent and tamper-resistant claim records.</p>
+            <p>Prevent replay attacks using cryptographic nullifiers and automate settlements on Hardhat EVM.</p>
         </div>
 
         <div class="feature-card">
             <i class="fa-solid fa-bolt"></i>
             <h3>Fast Claims</h3>
-            <p>Streamline insurance verification and claim processing.</p>
+            <p>Streamline insurance verification and release claim settlements directly to hospital wallets.</p>
         </div>
 
     </div>
@@ -178,8 +191,8 @@
             <h3>Patient Portal</h3>
 
             <p>
-                Manage medical records, control data permissions
-                and track insurance claims.
+                Manage encrypted medical records, control hospital permissions
+                and track claims on the blockchain.
             </p>
 
             <button onclick="openPortal('patient')">
@@ -200,8 +213,8 @@
             <h3>Hospital Portal</h3>
 
             <p>
-                Manage patient treatment details, create claims
-                and generate verification proofs.
+                Verify patient treatment authorization, create claims
+                and generate Groth16 verification proofs.
             </p>
 
             <button onclick="openPortal('hospital')">
@@ -222,8 +235,8 @@
             <h3>Insurance Portal</h3>
 
             <p>
-                Review insurance claims, verify proofs
-                and manage claim approvals.
+                Review insurance claims with zero private data exposure, verify ZKP
+                and execute smart contract settlements.
             </p>
 
             <button onclick="openPortal('insurer')">
@@ -251,7 +264,7 @@
 
         <button class="logout-btn" onclick="logout()">
             <i class="fa-solid fa-right-from-bracket"></i>
-            Logout
+            Exit Portal
         </button>
 
     </div>
@@ -260,12 +273,30 @@
     <!-- PATIENT DASHBOARD -->
     <div id="patientDashboard" class="dashboard-content" style="display:none;">
 
+        <!-- Patient Profile Overview -->
+        <div class="dashboard-panel" style="background:#f8fafc;">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <h3 style="margin-bottom:4px;">Rahul Sharma</h3>
+                    <p style="font-size:12px; color:var(--muted);">
+                        Policy ID: <strong>POL-IND-882190</strong> • Wallet: <span style="font-family:monospace;">0x7099...79C8</span>
+                    </p>
+                </div>
+                <div>
+                    <p style="font-size:11px; color:var(--muted);">Policy Commitment (On-Chain):</p>
+                    <p style="font-family:monospace; font-size:11px; color:var(--primary); font-weight:700;">
+                        0x2b4c1069...e3f22b7
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <div class="stats-grid">
 
             <div class="stat-card">
                 <i class="fa-solid fa-file-medical"></i>
-                <h3>03</h3>
-                <p>Medical Records</p>
+                <h3 id="patientRecordsCount">03</h3>
+                <p>Medical Records (AES-256)</p>
             </div>
 
             <div class="stat-card">
@@ -277,51 +308,61 @@
             <div class="stat-card">
                 <i class="fa-solid fa-check-circle"></i>
                 <h3 id="patientApprovedCount">0</h3>
-                <p>Approved Claims</p>
+                <p>Settled Claims</p>
             </div>
 
         </div>
 
+        <!-- Encrypted Medical Records List -->
         <div class="dashboard-panel">
 
-            <h3>My Medical Records</h3>
+            <h3>My Encrypted Medical Records</h3>
+            <p class="panel-subtitle">Payloads are AES-256-GCM encrypted off-chain. SHA-256 integrity commitments are anchored on-chain.</p>
 
-            <div class="record">
-                <i class="fa-solid fa-file-medical"></i>
-                <div>
-                    <h4>General Health Checkup</h4>
-                    <p>Sample record • 10 October 2026</p>
+            <div id="patientRecordsList">
+                <div class="record">
+                    <i class="fa-solid fa-file-medical"></i>
+                    <div>
+                        <h4>General Health Checkup</h4>
+                        <p>Ciphertext: c6a4f89d... • SHA-256: 0xfc9f50a88fbcabd41adb...</p>
+                    </div>
+                    <span class="status protected">Protected</span>
                 </div>
-                <span class="status protected">Protected</span>
-            </div>
 
-            <div class="record">
-                <i class="fa-solid fa-heart-pulse"></i>
-                <div>
-                    <h4>Blood Test Report</h4>
-                    <p>Sample record • 15 October 2026</p>
+                <div class="record">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                    <div>
+                        <h4>Blood Test Report</h4>
+                        <p>Ciphertext: 81b29ce0... • SHA-256: 0x3d82049ba0928f244a1e...</p>
+                    </div>
+                    <span class="status protected">Protected</span>
                 </div>
-                <span class="status protected">Protected</span>
             </div>
 
         </div>
 
+        <!-- Permissions Panel -->
         <div class="dashboard-panel">
 
-            <h3>Data Access Permission</h3>
-
-            <p>Allow hospital access to your medical records.</p>
+            <h3>Hospital Data Access Permission</h3>
+            <p class="panel-subtitle">Allow Apollo Hospital Delhi access to decrypt medical records. Every toggle is recorded on-chain.</p>
 
             <label class="toggle-row">
-                <span>Hospital Access</span>
+                <span>Apollo Hospital Delhi Access</span>
                 <input type="checkbox" id="permissionToggle"
                        onchange="togglePermission(this.checked)">
             </label>
 
-            <p id="permissionStatus">Access is currently disabled.</p>
+            <p id="permissionStatus">Checking hospital access permission...</p>
+
+            <div id="permissionTxAlert" class="onchain-alert" style="display:none;">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>On-Chain Permission Event: <span id="permissionTxHash"></span></span>
+            </div>
 
         </div>
 
+        <!-- Patient Claims -->
         <div class="dashboard-panel">
 
             <h3>My Insurance Claims</h3>
@@ -329,11 +370,24 @@
 
         </div>
 
+        <!-- Audit Trail -->
+        <div class="dashboard-panel">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Immutable Audit Trail</h3>
+            <p class="panel-subtitle">Ledger of authorization events, claim proofs, and settlement transactions.</p>
+            <div id="patientAuditTrail"></div>
+        </div>
+
     </div>
 
 
     <!-- HOSPITAL DASHBOARD -->
     <div id="hospitalDashboard" class="dashboard-content" style="display:none;">
+
+        <!-- Permission Banner -->
+        <div id="hospitalPermissionBanner" class="banner-alert banner-revoked">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="hospitalBannerText">Checking patient permission status...</span>
+        </div>
 
         <div class="stats-grid">
 
@@ -350,16 +404,17 @@
             </div>
 
             <div class="stat-card">
-                <i class="fa-solid fa-shield"></i>
-                <h3>ZKP</h3>
-                <p>Proof System</p>
+                <i class="fa-solid fa-fingerprint"></i>
+                <h3>Groth16</h3>
+                <p>ZKP Proof System</p>
             </div>
 
         </div>
 
         <div class="dashboard-panel">
 
-            <h3>Create New Insurance Claim</h3>
+            <h3>Create New Insurance Claim & Generate ZKP</h3>
+            <p class="panel-subtitle">Fields marked [PRIVATE] are used for Groth16 witness computation and stripped from the insurer payload.</p>
 
             <form id="claimForm">
 
@@ -368,35 +423,58 @@
                     <div class="form-group">
                         <label>Patient Name</label>
                         <input type="text" id="patientName"
-                               placeholder="Enter patient name" required>
+                               value="Rahul Sharma" placeholder="Enter patient name" required>
                     </div>
 
                     <div class="form-group">
                         <label>Policy ID</label>
                         <input type="text" id="policyId"
-                               placeholder="Enter policy ID" required>
+                               value="POL-IND-882190" placeholder="Enter policy ID" required>
                     </div>
 
                     <div class="form-group">
-                        <label>Treatment</label>
+                        <label>
+                            <span>Treatment</span>
+                            <span class="private-badge"><i class="fa-solid fa-lock"></i> [Private]</span>
+                        </label>
                         <input type="text" id="treatment"
-                               placeholder="Enter treatment" required>
+                               value="Appendectomy" placeholder="Enter treatment (e.g. Appendectomy)" required>
                     </div>
 
                     <div class="form-group">
                         <label>Claim Amount (₹)</label>
                         <input type="number" id="claimAmount"
-                               placeholder="Enter amount" min="1" required>
+                               value="20000" placeholder="Enter amount" min="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span>Diagnosis</span>
+                            <span class="private-badge"><i class="fa-solid fa-lock"></i> [Private]</span>
+                        </label>
+                        <input type="text" id="diagnosis"
+                               value="Acute Appendicitis (ICD-10 K35.8)" placeholder="Diagnosis" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span>Prescriptions</span>
+                            <span class="private-badge"><i class="fa-solid fa-lock"></i> [Private]</span>
+                        </label>
+                        <input type="text" id="prescriptions"
+                               value="Ceftriaxone 1g IV, Metronidazole 500mg, Tramadol 50mg" placeholder="Prescriptions" required>
                     </div>
 
                 </div>
 
-                <button type="submit" class="primary-btn">
-                    Submit Claim
-                    <i class="fa-solid fa-arrow-right"></i>
+                <button type="submit" id="submitClaimBtn" class="primary-btn">
+                    <i class="fa-solid fa-fingerprint"></i>
+                    Generate ZKP & Submit Claim
                 </button>
 
             </form>
+
+            <div id="hospitalZkpFeedback" class="proof-box" style="display:none;"></div>
 
         </div>
 
@@ -422,20 +500,21 @@
             <div class="stat-card">
                 <i class="fa-solid fa-clock"></i>
                 <h3 id="insurerPending">0</h3>
-                <p>Pending Claims</p>
+                <p>Pending ZKP Verification</p>
             </div>
 
             <div class="stat-card">
                 <i class="fa-solid fa-check-circle"></i>
                 <h3 id="insurerApproved">0</h3>
-                <p>Approved Claims</p>
+                <p>Settled On-Chain</p>
             </div>
 
         </div>
 
         <div class="dashboard-panel">
 
-            <h3>Insurance Claim Verification</h3>
+            <h3>Insurance Claim Verification & Settlement</h3>
+            <p class="panel-subtitle">Zero sensitive medical data is visible to the insurer. Verify mathematical Groth16 proofs and settle on Hardhat EVM.</p>
 
             <div id="insurerClaims"></div>
 
@@ -459,7 +538,7 @@
             <i class="fa-solid fa-fingerprint"></i>
         </div>
 
-        <h2>ZKP Verification</h2>
+        <h2>Groth16 ZKP Verification</h2>
 
         <p id="verificationMessage">
             Checking claim proof...
@@ -467,7 +546,7 @@
 
         <div id="verificationResult"></div>
 
-        <button class="primary-btn" onclick="closeModal()">
+        <button class="primary-btn" id="modalCloseBtn" onclick="closeModal()">
             Done
         </button>
 
@@ -486,12 +565,10 @@
         <h2>Privacy Should Never Be A <span>Trade-Off.</span></h2>
 
         <p>
-            HealthGuard aims to transform healthcare insurance
-            through privacy-preserving technologies.
-
-            By combining Zero-Knowledge Proofs and Blockchain,
-            our platform demonstrates how insurance eligibility
-            can be verified without exposing sensitive medical data.
+            HealthGuard transforms health insurance through mathematical cryptography.
+            By pairing Circom Groth16 Zero-Knowledge Proofs with Solidity Smart Contracts
+            and AES-256-GCM encrypted off-chain storage, patients retain absolute sovereignty
+            over their medical history while insurers verify eligibility with mathematical certainty.
         </p>
 
     </div>
@@ -507,7 +584,7 @@
     </div>
 
     <p>Privacy First. Trust Always.</p>
-    <p class="copyright">© 2026 HealthGuard. Hackathon Prototype.</p>
+    <p class="copyright">© 2026 HealthGuard. Circom 2.x • SnarkJS Groth16 • Solidity 0.8.20 • AES-256-GCM • FastAPI • Next.js</p>
 </footer>
 
 

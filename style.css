@@ -30,7 +30,7 @@ body {
     line-height: 1.6;
 }
 
-button, input {
+button, input, textarea {
     font-family: inherit;
 }
 
@@ -56,11 +56,14 @@ button {
     font-size: 23px;
     font-weight: 800;
     color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
 }
 
 .logo i {
     color: var(--accent);
-    margin-right: 8px;
 }
 
 .nav-links {
@@ -72,11 +75,64 @@ button {
     color: var(--text);
     font-size: 14px;
     font-weight: 600;
+    text-decoration: none;
     transition: 0.3s;
 }
 
 .nav-links a:hover {
     color: var(--accent);
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #edf6fc;
+    border: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.status-pill .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    display: inline-block;
+}
+
+.status-pill .dot.offline {
+    background: #f59e0b;
+    box-shadow: none;
+}
+
+.nextjs-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #f0f7ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.nextjs-link:hover {
+    background: #dbeafe;
 }
 
 .nav-btn {
@@ -85,6 +141,11 @@ button {
     color: white;
     background: var(--primary);
     font-weight: 600;
+    transition: 0.3s;
+}
+
+.nav-btn:hover {
+    background: var(--secondary);
 }
 
 .hero {
@@ -98,7 +159,9 @@ button {
 }
 
 .tag {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     background: #dff4f2;
     color: var(--secondary);
     padding: 8px 15px;
@@ -142,6 +205,9 @@ button {
     font-size: 14px;
     font-weight: 700;
     transition: 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .primary-btn {
@@ -195,6 +261,11 @@ button {
     box-shadow: 0 25px 70px rgba(18,60,105,0.15);
     text-align: center;
     transform: rotate(-3deg);
+    transition: 0.3s ease;
+}
+
+.main-card:hover {
+    transform: rotate(0deg) scale(1.02);
 }
 
 .card-icon {
@@ -227,6 +298,10 @@ button {
     border-radius: 8px;
     font-size: 13px;
     font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .card-bottom {
@@ -235,6 +310,7 @@ button {
     justify-content: space-between;
     font-size: 11px;
     color: var(--muted);
+    font-weight: 600;
 }
 
 .section {
@@ -349,6 +425,10 @@ button {
     font-size: 13px;
     font-weight: 700;
     transition: 0.3s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .portal-card button:hover {
@@ -365,12 +445,14 @@ button {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 35px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
 }
 
 .dashboard-header h2 {
     font-size: 30px;
     color: var(--dark);
-    margin-top: 12px;
+    margin-top: 8px;
 }
 
 .dashboard-header p {
@@ -383,7 +465,16 @@ button {
     background: #feeceb;
     color: #c13c3c;
     border-radius: 8px;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.2s;
+}
+
+.logout-btn:hover {
+    background: #fdd8d6;
 }
 
 .stats-grid {
@@ -427,6 +518,12 @@ button {
 .dashboard-panel h3 {
     color: var(--dark);
     font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.dashboard-panel .panel-subtitle {
+    color: var(--muted);
+    font-size: 12px;
     margin-bottom: 20px;
 }
 
@@ -434,8 +531,11 @@ button {
     display: flex;
     align-items: center;
     gap: 15px;
-    padding: 17px 0;
-    border-bottom: 1px solid var(--border);
+    padding: 17px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 12px;
+    background: #fafcff;
 }
 
 .record > i {
@@ -443,6 +543,7 @@ button {
     color: var(--secondary);
     padding: 14px;
     border-radius: 10px;
+    font-size: 18px;
 }
 
 .record h4 {
@@ -451,8 +552,10 @@ button {
 }
 
 .record p {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--muted);
+    font-family: monospace;
+    margin-top: 2px;
 }
 
 .status {
@@ -478,14 +581,46 @@ button {
 }
 
 .toggle-row input {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     accent-color: var(--secondary);
+    cursor: pointer;
 }
 
-#permissionStatus {
-    color: var(--muted);
+.onchain-alert {
+    margin-top: 15px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: #e9f8ef;
+    color: #166534;
     font-size: 12px;
+    font-family: monospace;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    word-break: break-all;
+}
+
+.banner-alert {
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.banner-granted {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+}
+
+.banner-revoked {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
 }
 
 .form-grid {
@@ -505,6 +640,15 @@ button {
     font-size: 13px;
     font-weight: 600;
     color: var(--dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.form-group label .private-badge {
+    font-size: 11px;
+    color: var(--secondary);
+    font-weight: 700;
 }
 
 .form-group input {
@@ -524,21 +668,37 @@ button {
 .claim-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     flex-wrap: wrap;
-    gap: 12px;
-    padding: 18px 0;
-    border-bottom: 1px solid var(--border);
+    gap: 15px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 15px;
+    background: #fafcff;
 }
 
 .claim-item h4 {
     color: var(--dark);
-    font-size: 14px;
+    font-size: 15px;
+    margin-bottom: 4px;
 }
 
 .claim-item p {
     color: var(--muted);
     font-size: 12px;
+    line-height: 1.6;
+}
+
+.claim-signals {
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    font-family: monospace;
+    font-size: 11px;
+    color: #334155;
+    word-break: break-all;
 }
 
 .claim-actions {
@@ -548,22 +708,31 @@ button {
 }
 
 .claim-actions button {
-    padding: 8px 12px;
-    border-radius: 6px;
-    background: #eaf3fa;
-    color: var(--primary);
-    font-size: 11px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: var(--primary);
+    color: white;
+    font-size: 12px;
     font-weight: 700;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.claim-actions .approve {
-    background: #e3f6ec;
-    color: var(--green);
+.claim-actions button:hover {
+    background: var(--secondary);
 }
 
-.claim-actions .reject {
-    background: #feeceb;
-    color: #bd4141;
+.badge-redacted {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px dashed #cbd5e1;
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
 }
 
 .claim-status {
@@ -578,7 +747,7 @@ button {
     color: #a46a12;
 }
 
-.approved {
+.approved, .settled {
     background: #e3f6ec;
     color: var(--green);
 }
@@ -588,11 +757,47 @@ button {
     color: #bd4141;
 }
 
+.proof-box {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    font-family: monospace;
+    font-size: 11px;
+    color: #1e293b;
+    overflow-x: auto;
+}
+
+.audit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.audit-table th, .audit-table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.audit-table th {
+    background: #f8fafc;
+    color: var(--dark);
+    font-weight: 700;
+}
+
+.audit-table td {
+    color: var(--muted);
+    font-family: monospace;
+}
+
 .modal {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(10,25,45,0.65);
+    background: rgba(10,25,45,0.7);
+    backdrop-filter: blur(4px);
     z-index: 200;
     justify-content: center;
     align-items: center;
@@ -603,10 +808,11 @@ button {
     position: relative;
     background: white;
     width: 100%;
-    max-width: 420px;
+    max-width: 480px;
     padding: 40px 30px;
-    border-radius: 18px;
+    border-radius: 20px;
     text-align: center;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.2);
 }
 
 .close-btn {
@@ -641,9 +847,15 @@ button {
 }
 
 #verificationResult {
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 2;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.8;
+    text-align: left;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 10px;
+    margin-top: 15px;
 }
 
 .about {
@@ -678,6 +890,7 @@ footer {
 footer .logo {
     color: white;
     margin-bottom: 12px;
+    justify-content: center;
 }
 
 footer p {
@@ -721,6 +934,10 @@ footer p {
     }
 
     .nav-links {
+        display: none;
+    }
+
+    .status-pill {
         display: none;
     }
 
