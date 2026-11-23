@@ -105,6 +105,8 @@ from backend.blockchain import blockchain_client, get_contract_address
 # Initialize database schema on startup
 init_db()
 
+from backend.app.api.auth import router as auth_router
+
 app = FastAPI(
     title="HealthGuard API",
     description="Privacy-Preserving Healthcare Records & ZKP Insurance Claims Platform",
@@ -119,6 +121,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount Zero-Trust Authentication & RBAC Router
+app.include_router(auth_router)
 
 
 # --- Pydantic Request / Response Schemas ---

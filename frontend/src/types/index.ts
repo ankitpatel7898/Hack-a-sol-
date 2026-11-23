@@ -72,3 +72,66 @@ export interface SystemStatus {
 }
 
 export type UserRole = "patient" | "hospital" | "insurer";
+
+export interface UserProfilePII {
+  email_plain?: string;
+  date_of_birth?: string;
+  policy_id?: string;
+  emergency_contact?: string;
+  health_issues?: string;
+  mac_address?: string;
+  hospital_license?: string;
+  department?: string;
+  insurer_code?: string;
+  company_name?: string;
+  terminal_mac?: string;
+  phone?: string;
+  age?: number;
+  sex?: string;
+  [key: string]: any;
+}
+
+export interface AuthUser {
+  id: string;
+  role: UserRole;
+  name: string;
+  email: string;
+  masked_email: string;
+  wallet_address?: string;
+  profile_pii?: UserProfilePII;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+  role?: UserRole;
+  remember_me?: boolean;
+}
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  name: string;
+  role: UserRole;
+  wallet_address?: string;
+  date_of_birth?: string;
+  policy_id?: string;
+  emergency_contact?: string;
+  health_issues?: string;
+  mac_address?: string;
+  hospital_license?: string;
+  department?: string;
+  insurer_code?: string;
+  company_name?: string;
+  age?: number;
+  sex?: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message: string;
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  user: AuthUser;
+}

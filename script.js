@@ -53,18 +53,27 @@ function updateNavUserArea() {
 
     if (currentUser) {
         const roleIcon = currentUser.role === "patient" ? "fa-user" : currentUser.role === "hospital" ? "fa-hospital" : "fa-shield-halved";
+        const maskedEmail = currentUser.masked_email || (currentUser.email ? currentUser.email.replace(/(.{1})(.*)(@.*)/, "$1***$3") : "user@healthshield.io");
+        const walletPreview = currentUser.wallet_address ? `${currentUser.wallet_address.slice(0, 6)}...${currentUser.wallet_address.slice(-4)}` : "DEK-Bound";
+
         navUserArea.innerHTML = `
-            <div class="user-nav-badge">
-                <i class="fa-solid ${roleIcon}"></i>
-                <span>${escapeHTML(currentUser.name)} <strong style="text-transform:uppercase; font-size:10px; background:#c7e6e8; padding:1px 5px; border-radius:4px;">${currentUser.role}</strong></span>
-                <button class="user-nav-logout" onclick="logout()" title="Sign Out">
-                    <i class="fa-solid fa-right-from-bracket"></i>
+            <div class="user-nav-badge" style="display:flex; align-items:center; gap:8px; background:white; border:1px solid #cbd5e1; padding:6px 12px; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                <i class="fa-solid ${roleIcon}" style="color:var(--primary); font-size:14px;"></i>
+                <div style="display:flex; flex-direction:column; text-align:left; line-height:1.2;">
+                    <span style="font-size:12px; font-weight:700; color:var(--dark);">${escapeHTML(currentUser.name)}</span>
+                    <span style="font-size:10px; color:var(--muted); font-family:monospace;">${maskedEmail} • ${walletPreview}</span>
+                </div>
+                <span style="text-transform:uppercase; font-size:9px; font-weight:800; background:#E6F4F1; color:#0F5C5C; padding:2px 6px; border-radius:6px; border:1px solid #0F5C5C33;">
+                    ${currentUser.role}
+                </span>
+                <button class="user-nav-logout" onclick="logout()" title="Secure Sign Out" style="background:#feeceb; border:none; color:#c13c3c; width:26px; height:26px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;">
+                    <i class="fa-solid fa-right-from-bracket" style="font-size:11px;"></i>
                 </button>
             </div>
         `;
     } else {
         navUserArea.innerHTML = `
-            <button class="nav-btn" onclick="openAuthModal('patient', 'login')">
+            <button class="nav-btn" onclick="openAuthModal('patient', 'login')" style="display:flex; align-items:center; gap:6px;">
                 <i class="fa-solid fa-right-to-bracket"></i>
                 Sign In / Register
             </button>
@@ -139,9 +148,20 @@ async function openPortal(requestedRole) {
 }
 
 function logout() {
+    const token = localStorage.getItem("healthshield_token") || sessionStorage.getItem("healthshield_token");
+    if (token) {
+        fetch(`${API_BASE_URL}/api/auth/logout`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` }
+        }).catch(err => console.warn("Logout notification error:", err));
+    }
+
     currentUser = null;
     currentRole = null;
     localStorage.removeItem("healthguard_user");
+    localStorage.removeItem("healthshield_token");
+    sessionStorage.removeItem("healthguard_user");
+    sessionStorage.removeItem("healthshield_token");
     updateNavUserArea();
 
     const dashboard = document.getElementById("dashboard");
@@ -278,6 +298,70 @@ function detectHardwareMac() {
     if (input) input.value = mac;
 }
 
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const isPass = input.type === "password";
+    input.type = isPass ? "text" : "password";
+    if (btn) {
+        btn.innerHTML = isPass ? "<i class='fa-solid fa-eye-slash'></i>" : "<i class='fa-solid fa-eye'></i>";
+    }
+}
+
+function checkPasswordStrength(val) {
+    const box = document.getElementById("passwordStrengthBox");
+    const bar = document.getElementById("passwordMeterBar");
+    const label = document.getElementById("passwordStrengthLabel");
+    
+    if (!box || !bar || !label) return;
+
+    if (!val || val.length === 0) {
+        box.style.display = "none";
+        return;
+    }
+    box.style.display = "block";
+
+    const cLen = val.length >= 10;
+    const cUpper = /[A-Z]/.test(val);
+    const cLower = /[a-z]/.test(val);
+    const cDigit = /[0-9]/.test(val);
+    const cSpecial = /[^A-Za-z0-9]/.test(val);
+
+    const setCrit = (id, met, txt) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.className = met ? "met" : "";
+        el.innerHTML = (met ? "✓ " : "✕ ") + txt;
+    };
+
+    setCrit("critLength", cLen, "Min 10 characters");
+    setCrit("critUpper", cUpper, "Uppercase letter");
+    setCrit("critLower", cLower, "Lowercase letter");
+    setCrit("critDigit", cDigit, "Number");
+    setCrit("critSpecial", cSpecial, "Special character");
+
+    const score = [cLen, cUpper, cLower, cDigit, cSpecial].filter(Boolean).length;
+    bar.className = "password-meter-bar";
+    
+    if (score <= 2) {
+        bar.classList.add("weak");
+        label.textContent = "Too Weak";
+        label.style.color = "#ef4444";
+    } else if (score === 3) {
+        bar.classList.add("fair");
+        label.textContent = "Fair";
+        label.style.color = "#f59e0b";
+    } else if (score === 4) {
+        bar.classList.add("good");
+        label.textContent = "Good";
+        label.style.color = "#0d9488";
+    } else {
+        bar.classList.add("strong");
+        label.textContent = "Zero-Trust Ready (Argon2id)";
+        label.style.color = "#0F5C5C";
+    }
+}
+
 function quickFillLogin(username, password, role) {
     switchAuthRole(role);
     switchAuthMode("login");
@@ -310,19 +394,20 @@ async function handleLogin(event) {
     event.preventDefault();
     clearAuthAlert();
 
-    const username = document.getElementById("loginUsername").value.trim();
+    const email = document.getElementById("loginUsername").value.trim();
     const password = document.getElementById("loginPassword").value;
     const role = currentAuthRole;
+    const remember = document.getElementById("loginRemember")?.checked ?? true;
     const submitBtn = document.getElementById("loginSubmitBtn");
 
-    if (!username || !password) {
-        showAuthAlert("Please enter both username and password.", "error");
+    if (!email || !password) {
+        showAuthAlert("Please enter both email and password.", "error");
         return;
     }
 
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Authenticating...";
+        submitBtn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Authenticating Argon2id & DEK...";
     }
 
     try {
@@ -330,7 +415,7 @@ async function handleLogin(event) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                username: username,
+                email: email,
                 password: password,
                 role: role
             })
@@ -340,44 +425,25 @@ async function handleLogin(event) {
 
         if (res.ok && data.success) {
             currentUser = data.user;
+            const storage = remember ? localStorage : sessionStorage;
+            storage.setItem("healthguard_user", JSON.stringify(currentUser));
+            storage.setItem("healthshield_token", data.access_token);
             localStorage.setItem("healthguard_user", JSON.stringify(currentUser));
             updateNavUserArea();
             closeAuthModal();
 
-            // Open the verified dashboard
             await openPortal(currentUser.role);
             return;
         } else {
-            showAuthAlert(data.detail || "Authentication failed. Please check credentials.", "error");
+            showAuthAlert(data.detail || data.message || "Authentication failed. Please check credentials.", "error");
         }
     } catch (e) {
-        // Fallback for standalone demo
-        console.warn("Backend auth failed, checking demo fallback:", e);
-        if (username === "rahul" && role === "patient") {
-            currentUser = {
-                id: "pat_rahul_sharma_001",
-                username: "rahul",
-                role: "patient",
-                name: "Rahul Sharma",
-                age: 32,
-                sex: "Male",
-                health_issues: "Asthma, Mild Hypertension",
-                mobile_no: "+91-9876543210",
-                mac_address: "00:1A:2B:3C:4D:5E",
-                policy_id: "POL-IND-882190",
-                wallet_address: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-            };
-            localStorage.setItem("healthguard_user", JSON.stringify(currentUser));
-            updateNavUserArea();
-            closeAuthModal();
-            openPortal("patient");
-            return;
-        }
-        showAuthAlert("Could not reach backend authentication server.", "error");
+        console.warn("Backend auth failed:", e);
+        showAuthAlert("Could not reach backend authentication server on port 8000.", "error");
     } finally {
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = `<i class='fa-solid fa-right-to-bracket'></i> Sign In to ${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard`;
+            submitBtn.innerHTML = `<span>Sign In to <span id="loginRoleLabel">${role.charAt(0).toUpperCase() + role.slice(1)}</span> Workspace</span> <i class="fa-solid fa-arrow-right"></i>`;
         }
     }
 }
@@ -386,41 +452,51 @@ async function handleRegister(event) {
     event.preventDefault();
     clearAuthAlert();
 
-    const username = document.getElementById("regUsername").value.trim();
+    const email = document.getElementById("regUsername").value.trim();
     const password = document.getElementById("regPassword").value;
+    const confirmPassword = document.getElementById("regConfirmPassword")?.value;
     const name = document.getElementById("regName").value.trim();
-    const mobile_no = document.getElementById("regMobile").value.trim();
+    const wallet = document.getElementById("regWalletAddress")?.value.trim();
     const mac_address = document.getElementById("regMac").value.trim();
     const role = currentAuthRole;
 
-    if (!username || !password || !name || !mobile_no || !mac_address) {
+    if (password !== confirmPassword) {
+        showAuthAlert("Passwords do not match.", "error");
+        return;
+    }
+
+    if (!email || !password || !name || !mac_address) {
         showAuthAlert("Please fill in all required registration fields.", "error");
         return;
     }
 
     const payload = {
-        username: username,
+        email: email,
         password: password,
         role: role,
         name: name,
-        mobile_no: mobile_no,
+        wallet_address: wallet || undefined,
         mac_address: mac_address
     };
 
     if (role === "patient") {
-        payload.age = parseInt(document.getElementById("regAge").value) || 30;
-        payload.sex = document.getElementById("regSex").value || "Male";
-        payload.health_issues = document.getElementById("regHealthIssues").value.trim() || "None reported";
+        payload.date_of_birth = document.getElementById("regDob")?.value;
+        payload.policy_id = document.getElementById("regPolicyId")?.value;
+        payload.emergency_contact = document.getElementById("regEmergencyContact")?.value;
+        payload.health_issues = document.getElementById("regHealthIssues")?.value.trim() || "None reported";
+        payload.mobile_no = document.getElementById("regMobile")?.value.trim();
     } else if (role === "hospital") {
-        payload.organization_id = document.getElementById("regHospitalLicense").value.trim() || ("HOSP-" + Math.floor(100 + Math.random() * 900));
+        payload.hospital_license = document.getElementById("regHospitalLicense")?.value.trim() || ("HOSP-" + Math.floor(100 + Math.random() * 900));
+        payload.department = document.getElementById("regDepartment")?.value.trim() || "General Clinical";
     } else if (role === "insurer") {
-        payload.organization_id = document.getElementById("regInsurerLicense").value.trim() || ("INS-" + Math.floor(1000 + Math.random() * 9000));
+        payload.insurer_code = document.getElementById("regInsurerLicense")?.value.trim() || ("INS-" + Math.floor(1000 + Math.random() * 9000));
+        payload.company_name = document.getElementById("regCompanyName")?.value.trim() || "Authorized Insurer";
     }
 
     const submitBtn = document.getElementById("registerSubmitBtn");
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Encrypting Profile & Saving...";
+        submitBtn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Generating DEK & Encrypting...";
     }
 
     try {
@@ -435,8 +511,9 @@ async function handleRegister(event) {
         if (res.ok && data.success) {
             currentUser = data.user;
             localStorage.setItem("healthguard_user", JSON.stringify(currentUser));
+            localStorage.setItem("healthshield_token", data.access_token);
             updateNavUserArea();
-            showAuthAlert(`Account created successfully! Redirecting to ${role} dashboard...`, "success");
+            showAuthAlert(`Account created and envelope keys generated! Redirecting to ${role} workspace...`, "success");
 
             setTimeout(async () => {
                 closeAuthModal();
@@ -452,7 +529,7 @@ async function handleRegister(event) {
     } finally {
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = "<i class='fa-solid fa-user-shield'></i> Create Account & Encrypt Profile";
+            submitBtn.innerHTML = "<i class='fa-solid fa-key'></i> <span>Generate DEK & Register Account</span>";
         }
     }
 }

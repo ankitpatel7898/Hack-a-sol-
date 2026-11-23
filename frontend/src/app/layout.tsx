@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Providers } from "../components/Providers";
 
 export const metadata: Metadata = {
-  title: "HealthGuard | Privacy-Preserving Healthcare & ZKP Insurance",
+  title: "HealthShield | Privacy-Preserving Healthcare & Zero-Trust ZKP Insurance",
   description:
-    "A secure healthcare insurance platform powered by Zero-Knowledge Proofs and Blockchain technology. Verify insurance claims without exposing private medical information.",
-  keywords: ["ZKP", "Zero Knowledge Proof", "Healthcare", "Web3", "Blockchain", "Groth16", "Privacy"],
+    "A zero-trust healthcare insurance platform powered by Zero-Knowledge Proofs, Argon2id, and AES-256-GCM envelope encryption.",
+  keywords: ["ZKP", "Zero Knowledge Proof", "Healthcare", "Web3", "Blockchain", "Groth16", "Privacy", "Argon2id", "AES-256-GCM"],
 };
 
 export default function RootLayout({
@@ -28,7 +29,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col antialiased bg-brandBg text-textMain">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

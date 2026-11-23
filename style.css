@@ -1286,3 +1286,251 @@ footer p {
     margin: 0 auto 16px;
 }
 
+/* Split-Screen Auth Portal Layout */
+.auth-split-card {
+    display: flex;
+    width: min(94%, 960px);
+    max-height: 92vh;
+    padding: 0;
+    overflow: hidden;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);
+    border: 1px solid #e2e8f0;
+}
+
+.auth-hero-panel {
+    flex: 0 0 380px;
+    background: linear-gradient(145deg, #0F5C5C 0%, #136F63 100%);
+    color: #ffffff;
+    padding: 40px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-hero-panel::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    left: -60px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(230, 244, 241, 0.18) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.auth-hero-panel::after {
+    content: '';
+    position: absolute;
+    bottom: -80px;
+    right: -80px;
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle, rgba(19, 111, 99, 0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.auth-hero-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.auth-hero-brand .logo-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #E6F4F1;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.auth-hero-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    background: rgba(230, 244, 241, 0.18);
+    color: #E6F4F1;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    border: 1px solid rgba(230, 244, 241, 0.3);
+}
+
+.auth-hero-heading {
+    font-size: 26px;
+    font-weight: 900;
+    line-height: 1.25;
+    margin-bottom: 12px;
+    color: #ffffff;
+}
+
+.auth-hero-desc {
+    font-size: 12px;
+    line-height: 1.6;
+    color: rgba(230, 244, 241, 0.85);
+    margin-bottom: 24px;
+}
+
+.auth-hero-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.auth-hero-features li {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #f8fafc;
+}
+
+.auth-hero-features li i {
+    color: #5eead4;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.auth-hero-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 16px;
+    font-size: 11px;
+    color: rgba(230, 244, 241, 0.7);
+    display: flex;
+    justify-content: space-between;
+}
+
+.auth-form-panel {
+    flex: 1 1 auto;
+    padding: 32px 36px;
+    overflow-y: auto;
+    background: #ffffff;
+    position: relative;
+}
+
+.password-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrap input {
+    width: 100%;
+    padding-right: 42px !important;
+}
+
+.toggle-password-btn {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-password-btn:hover {
+    color: #475569;
+}
+
+.password-strength-box {
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.password-strength-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.password-meter-track {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.password-meter-bar {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+    border-radius: 9999px;
+}
+
+.password-meter-bar.weak {
+    width: 25%;
+    background-color: #ef4444;
+}
+
+.password-meter-bar.fair {
+    width: 50%;
+    background-color: #f59e0b;
+}
+
+.password-meter-bar.good {
+    width: 75%;
+    background-color: #0d9488;
+}
+
+.password-meter-bar.strong {
+    width: 100%;
+    background-color: #0F5C5C;
+}
+
+.password-criteria-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 10px;
+    color: #64748b;
+}
+
+.password-criteria-list span.met {
+    color: #0F5C5C;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .auth-split-card {
+        flex-direction: column;
+        width: 100%;
+        max-height: 96vh;
+    }
+    .auth-hero-panel {
+        display: none;
+    }
+    .auth-form-panel {
+        padding: 24px 20px;
+    }
+}
+
