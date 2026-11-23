@@ -37,14 +37,17 @@
             <span id="connectionText">Checking System...</span>
         </div>
 
+        <div id="navUserArea">
+            <button class="nav-btn" onclick="openAuthModal('patient', 'login')">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                Sign In / Register
+            </button>
+        </div>
+
         <a href="http://localhost:3000" target="_blank" class="nextjs-link" title="Open Next.js App">
             <i class="fa-solid fa-bolt"></i>
             Next.js App
         </a>
-
-        <button class="nav-btn" onclick="scrollToPortals()">
-            Get Started
-        </button>
     </div>
 </nav>
 
@@ -274,19 +277,42 @@
     <div id="patientDashboard" class="dashboard-content" style="display:none;">
 
         <!-- Patient Profile Overview -->
-        <div class="dashboard-panel" style="background:#f8fafc;">
-            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+        <div class="profile-highlight-banner">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
                 <div>
-                    <h3 style="margin-bottom:4px;">Rahul Sharma</h3>
-                    <p style="font-size:12px; color:var(--muted);">
-                        Policy ID: <strong>POL-IND-882190</strong> • Wallet: <span style="font-family:monospace;">0x7099...79C8</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <h3 id="patientNameDisplay" style="font-size:22px; margin-bottom:2px; color:var(--dark);">Rahul Sharma</h3>
+                        <span class="status protected" style="margin-left:0; font-size:10px;">Authenticated Patient</span>
+                    </div>
+                    <p style="font-size:13px; color:var(--muted); margin-top:2px;">
+                        Policy ID: <strong id="patientPolicyDisplay" style="color:var(--dark);">POL-IND-882190</strong> • Wallet: <span id="patientWalletDisplay" style="font-family:monospace; font-size:12px;">0x7099...79C8</span>
                     </p>
                 </div>
-                <div>
-                    <p style="font-size:11px; color:var(--muted);">Policy Commitment (On-Chain):</p>
-                    <p style="font-family:monospace; font-size:11px; color:var(--primary); font-weight:700;">
-                        0x2b4c1069...e3f22b7
+                <div style="text-align:right;">
+                    <p style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">On-Chain Policy Commitment</p>
+                    <p id="patientCommitmentDisplay" style="font-family:monospace; font-size:11px; color:var(--primary); font-weight:700; word-break:break-all;">
+                        0x2b4c1069812df936082ecbc58169192496738c8cbe39049a46452f190e3f22b7
                     </p>
+                </div>
+            </div>
+
+            <!-- Profile Meta Grid -->
+            <div class="profile-meta-grid">
+                <div class="profile-meta-item">
+                    <p class="label"><i class="fa-solid fa-user"></i> Demographics</p>
+                    <p class="val" id="patientDemographicsDisplay">32 Yrs • Male</p>
+                </div>
+                <div class="profile-meta-item">
+                    <p class="label"><i class="fa-solid fa-phone"></i> Mobile Contact</p>
+                    <p class="val" id="patientMobileDisplay">+91-9876543210</p>
+                </div>
+                <div class="profile-meta-item">
+                    <p class="label"><i class="fa-solid fa-laptop-code"></i> Hardware Anchor (MAC)</p>
+                    <p class="val"><span class="mac-badge" id="patientMacDisplay">00:1A:2B:3C:4D:5E</span></p>
+                </div>
+                <div class="profile-meta-item" style="grid-column: span 2;">
+                    <p class="label"><i class="fa-solid fa-notes-medical"></i> Verified Health Issues</p>
+                    <p class="val"><span class="health-alert-badge" id="patientHealthIssuesDisplay"><i class="fa-solid fa-triangle-exclamation"></i> Asthma, Mild Hypertension</span></p>
                 </div>
             </div>
         </div>
@@ -382,6 +408,31 @@
 
     <!-- HOSPITAL DASHBOARD -->
     <div id="hospitalDashboard" class="dashboard-content" style="display:none;">
+
+        <!-- Hospital Profile Overview -->
+        <div class="profile-highlight-banner" style="background: linear-gradient(135deg, #f8fafc 0%, #f0fdf4 100%); border-color: #bbf7d0;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+                <div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <h3 id="hospitalNameDisplay" style="font-size:22px; margin-bottom:2px; color:var(--dark);">Apollo Hospital Delhi</h3>
+                        <span class="status protected" style="background:#dcfce7; color:#15803d; margin-left:0; font-size:10px;">Licensed Provider</span>
+                    </div>
+                    <p style="font-size:13px; color:var(--muted); margin-top:2px;">
+                        Hospital Registration: <strong id="hospitalLicenseDisplay" style="color:var(--dark);">HOSP-DEL-401</strong>
+                    </p>
+                </div>
+                <div style="display:flex; gap:16px;">
+                    <div class="profile-meta-item">
+                        <p class="label"><i class="fa-solid fa-phone"></i> Contact Phone</p>
+                        <p class="val" id="hospitalContactDisplay">+91-11-26925858</p>
+                    </div>
+                    <div class="profile-meta-item">
+                        <p class="label"><i class="fa-solid fa-network-wired"></i> Terminal MAC Anchor</p>
+                        <p class="val"><span class="mac-badge" id="hospitalMacDisplay">B4:2E:99:A1:7C:12</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Permission Banner -->
         <div id="hospitalPermissionBanner" class="banner-alert banner-revoked">
@@ -489,6 +540,31 @@
     <!-- INSURANCE DASHBOARD -->
     <div id="insurerDashboard" class="dashboard-content" style="display:none;">
 
+        <!-- Insurer Profile Overview -->
+        <div class="profile-highlight-banner" style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border-color: #bfdbfe;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+                <div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <h3 id="insurerNameDisplay" style="font-size:22px; margin-bottom:2px; color:var(--dark);">Star Health Insurance</h3>
+                        <span class="status protected" style="background:#dbeafe; color:#1d4ed8; margin-left:0; font-size:10px;">Authorized Underwriter</span>
+                    </div>
+                    <p style="font-size:13px; color:var(--muted); margin-top:2px;">
+                        Regulatory License: <strong id="insurerLicenseDisplay" style="color:var(--dark);">INS-LIC-8891</strong>
+                    </p>
+                </div>
+                <div style="display:flex; gap:16px;">
+                    <div class="profile-meta-item">
+                        <p class="label"><i class="fa-solid fa-phone"></i> Hotline</p>
+                        <p class="val" id="insurerContactDisplay">1800-425-2255</p>
+                    </div>
+                    <div class="profile-meta-item">
+                        <p class="label"><i class="fa-solid fa-network-wired"></i> Terminal MAC Anchor</p>
+                        <p class="val"><span class="mac-badge" id="insurerMacDisplay">E8:6A:64:1F:3B:88</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="stats-grid">
 
             <div class="stat-card">
@@ -552,6 +628,201 @@
 
     </div>
 
+</div>
+
+
+<!-- AUTHENTICATION MODAL (LOGIN & REGISTER) -->
+<div class="auth-modal" id="authModal">
+    <div class="auth-modal-card">
+        <button class="auth-close-btn" onclick="closeAuthModal()">&times;</button>
+
+        <div style="text-align:center;">
+            <div style="display:inline-flex; width:48px; height:48px; border-radius:12px; background:#eef8f8; color:var(--primary); align-items:center; justify-content:center; font-size:24px; margin-bottom:12px;">
+                <i class="fa-solid fa-shield-heart"></i>
+            </div>
+            <h2 id="authModalTitle" style="font-size:22px; color:var(--dark); margin-bottom:4px;">Secure Portal Authentication</h2>
+            <p style="font-size:13px; color:var(--muted);">Select your healthcare role and access your isolated environment.</p>
+        </div>
+
+        <!-- Role Selector Tabs -->
+        <div class="auth-role-tabs">
+            <button type="button" class="auth-role-btn active" id="authRolePatient" onclick="switchAuthRole('patient')">
+                <i class="fa-solid fa-user"></i> Patient
+            </button>
+            <button type="button" class="auth-role-btn" id="authRoleHospital" onclick="switchAuthRole('hospital')">
+                <i class="fa-solid fa-hospital"></i> Hospital
+            </button>
+            <button type="button" class="auth-role-btn" id="authRoleInsurer" onclick="switchAuthRole('insurer')">
+                <i class="fa-solid fa-shield-halved"></i> Insurer
+            </button>
+        </div>
+
+        <!-- Mode Switch (Sign In vs Register) -->
+        <div class="auth-mode-switch">
+            <button type="button" class="auth-mode-tab active" id="authTabLogin" onclick="switchAuthMode('login')">
+                Sign In
+            </button>
+            <button type="button" class="auth-mode-tab" id="authTabRegister" onclick="switchAuthMode('register')">
+                Create Account (Register)
+            </button>
+        </div>
+
+        <!-- Alert Box -->
+        <div id="authAlert" class="auth-alert-box"></div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <input type="hidden" id="loginRole" value="patient">
+
+            <div class="form-group" style="margin-bottom:14px;">
+                <label>Unique User ID / Username</label>
+                <input type="text" id="loginUsername" placeholder="e.g. rahul, apollo, starhealth" required autocomplete="username">
+            </div>
+
+            <div class="form-group" style="margin-bottom:18px;">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your secure password" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" id="loginSubmitBtn" class="primary-btn" style="width:100%; justify-content:center;">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                Sign In to <span id="loginRoleLabel">Patient</span> Dashboard
+            </button>
+
+            <!-- Quick Demo Credentials Chips -->
+            <div class="auth-demo-chips">
+                <span style="font-size:11px; color:var(--muted); width:100%; display:block; font-weight:600; margin-bottom:2px;">Demo Quick-Fills:</span>
+                <button type="button" class="demo-chip" onclick="quickFillLogin('rahul', 'password123', 'patient')">
+                    👤 Patient: rahul
+                </button>
+                <button type="button" class="demo-chip" onclick="quickFillLogin('apollo', 'password123', 'hospital')">
+                    🏥 Hospital: apollo
+                </button>
+                <button type="button" class="demo-chip" onclick="quickFillLogin('starhealth', 'password123', 'insurer')">
+                    🛡️ Insurer: starhealth
+                </button>
+            </div>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="registerForm" onsubmit="handleRegister(event)" style="display:none;">
+            <input type="hidden" id="registerRole" value="patient">
+
+            <div class="form-grid" style="gap:12px; margin-bottom:12px;">
+                <div class="form-group">
+                    <label>Unique User ID / Username</label>
+                    <input type="text" id="regUsername" placeholder="Unique username" required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Strong password" required autocomplete="new-password">
+                </div>
+
+                <div class="form-group">
+                    <label><span id="regNameLabel">Full Legal Name</span></label>
+                    <input type="text" id="regName" placeholder="e.g. Rahul Sharma" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <input type="text" id="regMobile" placeholder="+91-9876543210" required>
+                </div>
+            </div>
+
+            <!-- Hardware MAC Address Anchor -->
+            <div class="form-group" style="margin-bottom:14px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label style="margin-bottom:0;"><i class="fa-solid fa-laptop-code"></i> Device Hardware Anchor (MAC Address)</label>
+                    <button type="button" class="mac-btn-detect" onclick="detectHardwareMac()">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Detect / Generate MAC
+                    </button>
+                </div>
+                <input type="text" id="regMac" placeholder="e.g. 00:1A:2B:3C:4D:5E" required style="margin-top:6px; font-family:monospace;">
+                <p style="font-size:11px; color:var(--muted); margin-top:4px;">
+                    Anchors cryptographic keys and cryptographic commitments to this verified device hardware signature.
+                </p>
+            </div>
+
+            <!-- PATIENT SPECIFIC FIELDS -->
+            <div id="patientSpecificFields" class="form-grid" style="gap:12px; margin-bottom:14px;">
+                <div class="form-group">
+                    <label>Age</label>
+                    <input type="number" id="regAge" placeholder="e.g. 32" min="1" max="120" value="32">
+                </div>
+
+                <div class="form-group">
+                    <label>Sex</label>
+                    <select id="regSex" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:white;">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>
+                        <span>Health Issues / Medical Conditions</span>
+                        <span class="private-badge"><i class="fa-solid fa-lock"></i> [AES-256 Encrypted]</span>
+                    </label>
+                    <input type="text" id="regHealthIssues" placeholder="e.g. Asthma, Mild Hypertension, Diabetes, None" value="Asthma, Mild Hypertension" required>
+                    <p style="font-size:11px; color:var(--muted); margin-top:4px;">
+                        These health conditions will be encrypted off-chain using AES-256-GCM and kept zero-knowledge concealed from insurers.
+                    </p>
+                </div>
+            </div>
+
+            <!-- HOSPITAL SPECIFIC FIELDS -->
+            <div id="hospitalSpecificFields" style="display:none; margin-bottom:14px;">
+                <div class="form-group">
+                    <label>Hospital Registration / License ID</label>
+                    <input type="text" id="regHospitalLicense" placeholder="e.g. HOSP-DEL-401">
+                </div>
+            </div>
+
+            <!-- INSURER SPECIFIC FIELDS -->
+            <div id="insurerSpecificFields" style="display:none; margin-bottom:14px;">
+                <div class="form-group">
+                    <label>Insurance Regulatory License ID</label>
+                    <input type="text" id="regInsurerLicense" placeholder="e.g. INS-LIC-8891">
+                </div>
+            </div>
+
+            <button type="submit" id="registerSubmitBtn" class="primary-btn" style="width:100%; justify-content:center;">
+                <i class="fa-solid fa-user-shield"></i>
+                Create Account & Encrypt Profile
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- RBAC ACCESS CONTROL BLOCK MODAL -->
+<div class="auth-modal" id="rbacBlockModal">
+    <div class="auth-modal-card" style="text-align:center; max-width:480px;">
+        <div class="rbac-denied-icon">
+            <i class="fa-solid fa-ban"></i>
+        </div>
+
+        <h2 style="font-size:22px; color:#bd4141; margin-bottom:8px;">Access Denied: Role Isolation</h2>
+
+        <p id="rbacBlockMessage" style="font-size:14px; color:var(--dark); line-height:1.6; margin-bottom:20px;">
+            You are authenticated as a <strong>PATIENT</strong>. You are strictly prevented from accessing the Hospital or Insurer dashboards.
+        </p>
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; text-align:left; font-size:12px; margin-bottom:22px; color:var(--muted);">
+            <p><i class="fa-solid fa-circle-info" style="color:var(--primary);"></i> <strong>Zero-Knowledge Security Boundary:</strong></p>
+            <p style="margin-top:4px;">HealthGuard guarantees that patients cannot submit unauthorized hospital claims, and insurers cannot alter patient cryptographic permission records.</p>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <button class="primary-btn" onclick="closeRbacModal()" style="font-size:13px;">
+                Return to My Dashboard
+            </button>
+            <button class="logout-btn" onclick="logoutAndSwitch()" style="font-size:13px; cursor:pointer;">
+                <i class="fa-solid fa-right-from-bracket"></i> Switch Account / Log Out
+            </button>
+        </div>
+    </div>
 </div>
 
 

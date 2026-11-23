@@ -92,7 +92,11 @@ from backend.db.database import (
     get_claims,
     update_claim_status,
     record_audit,
-    get_audit_trail
+    get_audit_trail,
+    register_user,
+    authenticate_user,
+    get_user_by_id,
+    get_user_by_username
 )
 from backend.security.encryption import encrypt_medical_record, decrypt_medical_record
 from backend.zkp.prover import generate_claim_zkp, verify_groth16_proof_local, APPROVED_HOSPITALS, COVERED_PROCEDURES
@@ -123,6 +127,25 @@ class PermissionUpdateRequest(BaseModel):
     patient_id: str = "pat_rahul_sharma_001"
     hospital_id: str = "Apollo Hospital Delhi"
     is_granted: bool
+
+
+class UserRegisterRequest(BaseModel):
+    username: str
+    password: str
+    role: str  # 'patient', 'hospital', 'insurer'
+    name: str
+    age: Optional[int] = None
+    sex: Optional[str] = None
+    health_issues: Optional[str] = None
+    mobile_no: Optional[str] = None
+    mac_address: Optional[str] = None
+    organization_id: Optional[str] = None
+
+
+class UserLoginRequest(BaseModel):
+    username: str
+    password: str
+    role: Optional[str] = None  # Expected portal role: 'patient', 'hospital', 'insurer'
 
 
 class ClaimSubmissionRequest(BaseModel):
@@ -201,6 +224,78 @@ def system_status():
 
 
 # ==============================================================================
+# AUTHENTICATION & ACCESS CONTROL (RBAC) ENDPOINTS
+# ==============================================================================
+
+@app.post("/api/auth/register")
+def register(req: UserRegisterRequest):
+    """
+    Register a new unique user profile (patient, hospital, insurer).
+    Saves demographic, medical, and hardware MAC anchor in database.
+    """
+    try:
+        user = register_user(
+            username=req.username,
+            password=req.password,
+            role=req.role,
+            name=req.name,
+            age=req.age,
+            sex=req.sex,
+            health_issues=req.health_issues,
+            mobile_no=req.mobile_no,
+            mac_address=req.mac_address,
+            organization_id=req.organization_id
+        )
+        return {
+            "success": True,
+            "message": f"Successfully registered {user['role'].capitalize()} account '{user['username']}'!",
+            "user": user
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+
+
+@app.post("/api/auth/login")
+def login(req: UserLoginRequest):
+    """
+    Authenticate user credentials and enforce Role-Based Access Control.
+    If a patient enters their login, they cannot access hospital or insurer dashboards,
+    and same goes for hospital and insurer.
+    """
+    try:
+        user = authenticate_user(
+            username=req.username,
+            password=req.password,
+            expected_role=req.role
+        )
+        return {
+            "success": True,
+            "message": f"Welcome back, {user['name']}!",
+            "user": user
+        }
+    except PermissionError as e:
+        # 403 Forbidden: Role mismatch
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        # 401 Unauthorized: Invalid username or password
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Authentication error: {str(e)}")
+
+
+@app.get("/api/auth/user/{user_id}")
+def get_user_profile(user_id: str):
+    """Fetch user profile by user_id."""
+    user = get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+
+# ==============================================================================
 # PATIENT PORTAL ENDPOINTS
 # ==============================================================================
 
@@ -243,6 +338,11 @@ def get_patient_dashboard(patient_id: str):
         "patient": {
             "id": patient["id"],
             "name": patient["name"],
+            "age": patient.get("age", 32),
+            "sex": patient.get("sex", "Male"),
+            "health_issues": patient.get("health_issues", "None reported"),
+            "mobile_no": patient.get("mobile_no", "+91-9876543210"),
+            "mac_address": patient.get("mac_address", "00:1A:2B:3C:4D:5E"),
             "wallet_address": patient["wallet_address"],
             "policy_id": patient["policy_id"],
             "policy_commitment": patient["policy_commitment"],

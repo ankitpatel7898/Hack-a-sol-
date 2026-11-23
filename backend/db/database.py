@@ -7,6 +7,7 @@ Manages patients, AES-encrypted records, permissions, ZKP claims, and immutable 
 import os
 import json
 import sqlite3
+import hashlib
 import datetime
 from typing import Dict, Any, List, Optional
 from backend.security.encryption import encrypt_medical_record
@@ -83,7 +84,37 @@ def init_db():
         tx_hash TEXT,
         created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL,
+        name TEXT NOT NULL,
+        age INTEGER,
+        sex TEXT,
+        health_issues TEXT,
+        mobile_no TEXT,
+        mac_address TEXT,
+        organization_id TEXT,
+        policy_id TEXT,
+        wallet_address TEXT,
+        created_at TEXT NOT NULL
+    );
     """)
+
+    # Migration: add demographic & MAC anchor columns to patients if not present
+    for col, col_type in [
+        ("age", "INTEGER"),
+        ("sex", "TEXT"),
+        ("health_issues", "TEXT"),
+        ("mobile_no", "TEXT"),
+        ("mac_address", "TEXT")
+    ]:
+        try:
+            cursor.execute(f"ALTER TABLE patients ADD COLUMN {col} {col_type}")
+        except Exception:
+            pass
 
     # Seed Default Patient if not exists
     cursor.execute("SELECT id FROM patients WHERE id = 'pat_rahul_sharma_001'")
@@ -166,8 +197,274 @@ def init_db():
             )
         )
 
+    # Ensure Rahul Sharma has demographic & MAC anchor fields populated
+    cursor.execute("""
+        UPDATE patients SET
+            age = COALESCE(age, 32),
+            sex = COALESCE(sex, 'Male'),
+            health_issues = COALESCE(health_issues, 'Asthma, Mild Hypertension'),
+            mobile_no = COALESCE(mobile_no, '+91-9876543210'),
+            mac_address = COALESCE(mac_address, '00:1A:2B:3C:4D:5E')
+        WHERE id = 'pat_rahul_sharma_001'
+    """)
+
+    # Seed Default Accounts in users table if not existing
+    cursor.execute("SELECT id FROM users WHERE username = 'rahul'")
+    if not cursor.fetchone():
+        now = datetime.datetime.utcnow().isoformat()
+        cursor.execute(
+            """
+            INSERT INTO users (id, username, password_hash, role, name, age, sex, health_issues, mobile_no, mac_address, organization_id, policy_id, wallet_address, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "pat_rahul_sharma_001",
+                "rahul",
+                hash_password("password123"),
+                "patient",
+                "Rahul Sharma",
+                32,
+                "Male",
+                "Asthma, Mild Hypertension",
+                "+91-9876543210",
+                "00:1A:2B:3C:4D:5E",
+                None,
+                "POL-IND-882190",
+                "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+                now
+            )
+        )
+        cursor.execute(
+            """
+            INSERT INTO users (id, username, password_hash, role, name, age, sex, health_issues, mobile_no, mac_address, organization_id, policy_id, wallet_address, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "hosp_apollo_001",
+                "apollo",
+                hash_password("password123"),
+                "hospital",
+                "Apollo Hospital Delhi",
+                None,
+                None,
+                None,
+                "+91-11-26925858",
+                "B4:2E:99:A1:7C:12",
+                "HOSP-DEL-401",
+                None,
+                "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+                now
+            )
+        )
+        cursor.execute(
+            """
+            INSERT INTO users (id, username, password_hash, role, name, age, sex, health_issues, mobile_no, mac_address, organization_id, policy_id, wallet_address, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "ins_starhealth_001",
+                "starhealth",
+                hash_password("password123"),
+                "insurer",
+                "Star Health Insurance",
+                None,
+                None,
+                None,
+                "1800-425-2255",
+                "E8:6A:64:1F:3B:88",
+                "INS-LIC-8891",
+                None,
+                "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+                now
+            )
+        )
+
     conn.commit()
     conn.close()
+
+
+def hash_password(password: str) -> str:
+    """Hash password securely using PBKDF2-HMAC-SHA256 with 16-byte random salt."""
+    salt = os.urandom(16).hex()
+    key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), bytes.fromhex(salt), 100000).hex()
+    return f"{salt}:{key}"
+
+
+def verify_password(stored_password: str, provided_password: str) -> bool:
+    """Verify provided password against stored PBKDF2 hash."""
+    try:
+        salt, key = stored_password.split(":")
+        new_key = hashlib.pbkdf2_hmac("sha256", provided_password.encode("utf-8"), bytes.fromhex(salt), 100000).hex()
+        return key == new_key
+    except Exception:
+        return False
+
+
+def register_user(
+    username: str,
+    password: str,
+    role: str,
+    name: str,
+    age: Optional[int] = None,
+    sex: Optional[str] = None,
+    health_issues: Optional[str] = None,
+    mobile_no: Optional[str] = None,
+    mac_address: Optional[str] = None,
+    organization_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """Register a new user with unique username, role, and profile attributes."""
+    clean_username = username.lower().strip()
+    clean_role = role.lower().strip()
+
+    if clean_role not in ["patient", "hospital", "insurer"]:
+        raise ValueError("Invalid role. Role must be 'patient', 'hospital', or 'insurer'.")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM users WHERE username = ?", (clean_username,))
+    if cursor.fetchone():
+        conn.close()
+        raise ValueError(f"Username '{clean_username}' is already taken. Please choose another unique username.")
+
+    now = datetime.datetime.utcnow().isoformat()
+    pwd_hash = hash_password(password)
+    user_id = f"usr_{clean_role}_{os.urandom(4).hex()}"
+    policy_id = None
+    wallet_address = "0x" + os.urandom(20).hex()
+
+    if clean_role == "patient":
+        policy_id = f"POL-IND-{os.urandom(3).hex().upper()}"
+        patient_id = f"pat_{os.urandom(4).hex()}"
+        user_id = patient_id
+        policy_commitment = "0x" + hashlib.sha256(f"{name}:{policy_id}:{mac_address}".encode()).hexdigest()
+
+        cursor.execute(
+            """
+            INSERT INTO patients (id, name, wallet_address, policy_id, policy_commitment, age, sex, health_issues, mobile_no, mac_address, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (patient_id, name, wallet_address, policy_id, policy_commitment, age, sex, health_issues, mobile_no, mac_address, now)
+        )
+
+        # Encrypt health issues if provided
+        if health_issues:
+            rec_data = {
+                "diagnosis": health_issues,
+                "procedureCode": 1001,
+                "prescriptions": "Patient self-declared medical conditions at registration",
+                "treatmentHistory": f"Device/MAC Anchor: {mac_address} • Verified: {now}"
+            }
+            c, iv, tag, h = encrypt_medical_record(rec_data)
+            cursor.execute(
+                """
+                INSERT INTO medical_records (id, patient_id, title, encrypted_payload_b64, iv_b64, auth_tag_b64, sha256_record_hash, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (f"rec_{os.urandom(4).hex()}", patient_id, "Registered Medical Profile & Pre-Existing Conditions", c, iv, tag, h, now)
+            )
+
+        # Grant access permission entry for Apollo Hospital
+        cursor.execute(
+            """
+            INSERT INTO permissions (id, patient_id, hospital_id, is_granted, tx_hash, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (f"perm_{os.urandom(4).hex()}", patient_id, "Apollo Hospital Delhi", 0, None, now)
+        )
+
+    cursor.execute(
+        """
+        INSERT INTO users (id, username, password_hash, role, name, age, sex, health_issues, mobile_no, mac_address, organization_id, policy_id, wallet_address, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (user_id, clean_username, pwd_hash, clean_role, name, age, sex, health_issues, mobile_no, mac_address, organization_id, policy_id, wallet_address, now)
+    )
+
+    # Immutable Audit Log
+    cursor.execute(
+        """
+        INSERT INTO audit_trail (id, actor_role, action, details, tx_hash, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (
+            f"aud_{os.urandom(4).hex()}",
+            clean_role.capitalize(),
+            "UserRegistered",
+            json.dumps({"username": clean_username, "role": clean_role, "name": name, "mac_address": mac_address}),
+            "0x" + os.urandom(32).hex(),
+            now
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "id": user_id,
+        "username": clean_username,
+        "role": clean_role,
+        "name": name,
+        "age": age,
+        "sex": sex,
+        "health_issues": health_issues,
+        "mobile_no": mobile_no,
+        "mac_address": mac_address,
+        "organization_id": organization_id,
+        "policy_id": policy_id,
+        "wallet_address": wallet_address,
+        "created_at": now
+    }
+
+
+def authenticate_user(username: str, password: str, expected_role: Optional[str] = None) -> Dict[str, Any]:
+    """Authenticate user credentials and optionally verify role constraints."""
+    clean_username = username.lower().strip()
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM users WHERE username = ?", (clean_username,)).fetchone()
+    conn.close()
+
+    if not row:
+        raise ValueError(f"No account found with username '{username}'. Please register first.")
+
+    if not verify_password(row["password_hash"], password):
+        raise ValueError("Invalid password. Please check your credentials.")
+
+    user = dict(row)
+    del user["password_hash"]
+
+    if expected_role and user["role"].lower() != expected_role.lower().strip():
+        raise PermissionError(
+            f"Access Denied: Account '{username}' is registered as a '{user['role'].upper()}', "
+            f"not a '{expected_role.upper()}'. You are not authorized to access this dashboard."
+        )
+
+    return user
+
+
+def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    conn.close()
+    if not row:
+        return None
+    d = dict(row)
+    if "password_hash" in d:
+        del d["password_hash"]
+    return d
+
+
+def get_user_by_username(username: str) -> Optional[Dict[str, Any]]:
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM users WHERE username = ?", (username.lower().strip(),)).fetchone()
+    conn.close()
+    if not row:
+        return None
+    d = dict(row)
+    if "password_hash" in d:
+        del d["password_hash"]
+    return d
+
 
 
 def get_patient(patient_id: str = "pat_rahul_sharma_001") -> Optional[Dict[str, Any]]:
