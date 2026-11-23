@@ -35,7 +35,9 @@ export default function InsurerLoginPage() {
       });
       router.push("/insurer/dashboard");
     } catch (err: any) {
-      setError(err.message || "Failed to sign in. Please check insurer credentials.");
+      const raw = err?.message || err;
+      const msg = typeof raw === "string" ? raw : JSON.stringify(raw);
+      setError(msg.includes("[object") ? "Failed to sign in. Please check insurer credentials." : msg);
     }
   };
 
@@ -61,7 +63,7 @@ export default function InsurerLoginPage() {
           {error && (
             <div className="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{error}</span>
+              <span>{typeof error === "string" ? error : JSON.stringify(error)}</span>
             </div>
           )}
 

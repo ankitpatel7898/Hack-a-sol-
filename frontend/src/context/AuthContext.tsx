@@ -3,6 +3,30 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { AuthUser, LoginCredentials, RegisterData, AuthResponse, UserRole } from "../types";
 
+function formatApiError(data: any, fallback: string): string {
+  if (!data) return fallback;
+  const detail = data.detail ?? data.message ?? data.error;
+  if (!detail) return fallback;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item: any) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object") {
+          const field = Array.isArray(item.loc) ? item.loc.slice(-1)[0] : "";
+          const msg = item.msg || item.message || JSON.stringify(item);
+          return field ? `${field}: ${msg}` : msg;
+        }
+        return String(item);
+      })
+      .join("; ");
+  }
+  if (typeof detail === "object" && detail !== null) {
+    return detail.msg || detail.message || JSON.stringify(detail);
+  }
+  return String(detail);
+}
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 interface AuthContextType {
@@ -116,7 +140,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.detail || data.message || "Authentication failed");
+        throw new Error(formatApiError(data, "Authentication failed"));
       }
 
       const authData = data as AuthResponse;
@@ -153,7 +177,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       const resData = await res.json();
       if (!res.ok) {
-        throw new Error(resData.detail || resData.message || "Registration failed");
+        throw new Error(formatApiError(resData, "Registration failed"));
       }
 
       const authData = resData as AuthResponse;

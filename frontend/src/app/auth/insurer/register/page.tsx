@@ -54,7 +54,9 @@ export default function InsurerRegisterPage() {
       });
       router.push("/insurer/dashboard");
     } catch (err: any) {
-      setError(err.message || "Registration failed. Please check inputs.");
+      const raw = err?.message || err;
+      const msg = typeof raw === "string" ? raw : JSON.stringify(raw);
+      setError(msg.includes("[object") ? "Registration failed. Please verify your details." : msg);
     }
   };
 
@@ -80,7 +82,7 @@ export default function InsurerRegisterPage() {
           {error && (
             <div className="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{error}</span>
+              <span>{typeof error === "string" ? error : JSON.stringify(error)}</span>
             </div>
           )}
 

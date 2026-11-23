@@ -28,8 +28,22 @@ export async function fetchJson<T>(
       let errorMsg = `HTTP Error ${res.status}`;
       try {
         const errorData = await res.json();
-        if (errorData.detail) {
-          errorMsg = errorData.detail;
+        const detail = errorData.detail ?? errorData.message;
+        if (detail) {
+          if (typeof detail === "string") {
+            errorMsg = detail;
+          } else if (Array.isArray(detail)) {
+            errorMsg = detail
+              .map((d: any) => {
+                if (typeof d === "string") return d;
+                const field = Array.isArray(d?.loc) ? d.loc.slice(-1)[0] : "";
+                const m = d?.msg || d?.message || JSON.stringify(d);
+                return field ? `${field}: ${m}` : m;
+              })
+              .join("; ");
+          } else if (typeof detail === "object") {
+            errorMsg = detail.msg || detail.message || JSON.stringify(detail);
+          }
         }
       } catch (e) {
         // ignore json parse error

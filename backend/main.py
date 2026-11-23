@@ -17,7 +17,7 @@ load_dotenv()
 if "SUPABASE_URL" not in os.environ:
     os.environ["SUPABASE_URL"] = "https://bfrsrxljllwuqmzybrml.supabase.co"
 if "SUPABASE_KEY" not in os.environ:
-    os.environ["SUPABASE_KEY"] = "your-supabase-key"
+    os.environ["SUPABASE_KEY"] = "sb_publishable_PgWgPrfdRdhNOqqSe9XlDg_jDJ9bcdD"
 
 try:
     from supabase import create_client
