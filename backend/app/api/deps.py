@@ -100,3 +100,10 @@ def require_role(allowed_roles: List[str]):
             )
         return current_user
     return role_checker
+
+
+# Role-Specific Convenience Dependencies
+require_patient = require_role(["patient"])
+require_hospital = require_role(["hospital"])
+require_insurer = require_role(["insurer"])
+
