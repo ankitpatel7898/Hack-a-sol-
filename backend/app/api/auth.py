@@ -1,13 +1,15 @@
 """
 HealthShield Authentication & Zero-Trust Encryption Router
 Implements Argon2id authentication, AES-256-GCM envelope encryption,
-blind indexing, and JWT token rotation.
+blind indexing, JWT token rotation, and real-time Supabase synchronization.
 """
 
 import os
 import uuid
 import datetime
+import requests
 from typing import Optional, Dict, Any
+from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException, status, Response, Request, Depends, Cookie
 from pydantic import BaseModel, Field
 
@@ -43,10 +45,42 @@ from backend.app.models.user import (
 )
 from backend.app.api.deps import get_current_user
 
+load_dotenv(override=True)
+
 # Ensure tables exist
 init_user_db()
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication & Zero-Trust Encryption"])
+
+
+# --- Supabase Real-Time Sync Helper (Self-Contained, No Circular Imports) ---
+
+def sync_patient_to_supabase(patient_payload: Dict[str, Any]) -> None:
+    """Upsert newly registered patient record into Supabase public.patients table."""
+    supabase_url = os.getenv("SUPABASE_URL", "").strip().strip("<>")
+    supabase_key = os.getenv("SUPABASE_KEY", "").strip().strip("<>")
+    if not supabase_url or not supabase_key:
+        return
+
+    clean_payload = {k: v for k, v in patient_payload.items() if v is not None}
+    try:
+        resp = requests.post(
+            f"{supabase_url}/rest/v1/patients",
+            headers={
+                "apikey": supabase_key,
+                "Authorization": f"Bearer {supabase_key}",
+                "Content-Type": "application/json",
+                "Prefer": "resolution=merge-duplicates,return=minimal"
+            },
+            json=clean_payload,
+            timeout=3.0
+        )
+        if resp.status_code in (200, 201, 204):
+            print(f"Synced patient {clean_payload.get('id')} to Supabase!")
+        else:
+            print(f"Supabase sync warning ({resp.status_code}): {resp.text}")
+    except Exception as e:
+        print(f"Supabase sync skipped (saved locally): {e}")
 
 
 # --- Pydantic v2 Request & Response Schemas ---
@@ -60,8 +94,10 @@ class RegisterRequest(BaseModel):
     wallet_address: Optional[str] = Field(None, description="Deterministic Hardhat or Web3 EVM wallet address")
     mobile_no: Optional[str] = Field(None, description="Mobile number for communication")
     phone: Optional[str] = Field(None, description="Phone number")
-    
+
     # Patient-Specific Fields
+    age: Optional[int] = Field(None, description="Patient age")
+    sex: Optional[str] = Field(None, description="Patient biological sex")
     date_of_birth: Optional[str] = Field(None, description="Date of Birth (YYYY-MM-DD)")
     policy_id: Optional[str] = Field(None, description="Insurance policy ID (e.g. POL-IND-882190)")
     emergency_contact: Optional[str] = Field(None, description="Emergency contact phone or relation")
@@ -112,7 +148,7 @@ async def register(req: RegisterRequest, response: Response):
     2. Generates unique per-user Data Encryption Key (DEK) and wraps it with Master Key.
     3. Hashes password using Argon2id.
     4. Envelope-encrypts all sensitive PII and profile metadata using user's DEK (AES-256-GCM).
-    5. Saves zero-trust record to database.
+    5. Saves zero-trust record to local SQLite and syncs patient metadata to Supabase.
     """
     clean_role = req.role.strip().lower()
     if clean_role not in ["patient", "hospital", "insurer"]:
@@ -121,8 +157,10 @@ async def register(req: RegisterRequest, response: Response):
             detail="Invalid role. Must be 'patient', 'hospital', or 'insurer'."
         )
 
+    clean_email = req.email.strip().lower()
+
     # 1. Searchable Blind Index Check
-    blind_index = compute_blind_index(req.email)
+    blind_index = compute_blind_index(clean_email)
     existing_user = get_user_by_blind_index(blind_index)
     if existing_user:
         raise HTTPException(
@@ -140,21 +178,30 @@ async def register(req: RegisterRequest, response: Response):
     # 4. Envelope Encryption of Name and Email
     resolved_name = (req.full_name or req.name or f"User ({clean_role.capitalize()})").strip()
     full_name_enc, name_nonce = encrypt_with_dek(resolved_name, user_dek)
-    email_enc, email_nonce = encrypt_with_dek(req.email.strip().lower(), user_dek)
+    email_enc, email_nonce = encrypt_with_dek(clean_email, user_dek)
+
+    resolved_phone = req.mobile_no or req.phone or "+91-9876543210"
+    resolved_mac = req.mac_address or "00:1A:2B:3C:4D:5E"
 
     # Package role-specific sensitive PII
     pii_payload: Dict[str, Any] = {
         "email_plain": req.email.strip(),
-        "mobile_no": req.mobile_no or req.phone or "+91-9876543210",
-        "mac_address": req.mac_address or "00:1A:2B:3C:4D:5E"
+        "mobile_no": resolved_phone,
+        "mac_address": resolved_mac
     }
+
+    resolved_dob = req.date_of_birth or "1994-05-12"
+    resolved_policy_id = req.policy_id or f"POL-IND-{os.urandom(3).hex().upper()}"
+    resolved_health_issues = req.health_issues or "None declared"
 
     if clean_role == "patient":
         pii_payload.update({
-            "date_of_birth": req.date_of_birth or "1994-05-12",
-            "policy_id": req.policy_id or f"POL-IND-{os.urandom(3).hex().upper()}",
-            "emergency_contact": req.emergency_contact or "+91-9876543210",
-            "health_issues": req.health_issues or "None declared"
+            "age": req.age,
+            "sex": req.sex,
+            "date_of_birth": resolved_dob,
+            "policy_id": resolved_policy_id,
+            "emergency_contact": req.emergency_contact or resolved_phone,
+            "health_issues": resolved_health_issues
         })
     elif clean_role == "hospital":
         pii_payload.update({
@@ -177,7 +224,7 @@ async def register(req: RegisterRequest, response: Response):
 
     user_record = {
         "id": user_id,
-        "username": req.email.strip().lower(),
+        "username": clean_email,
         "name": resolved_name,
         "role": clean_role,
         "email_blind_index": blind_index,
@@ -211,6 +258,25 @@ async def register(req: RegisterRequest, response: Response):
             detail=f"Registration failed: {str(e)}"
         )
 
+    # Sync patient profile to Supabase public.patients table
+    if clean_role == "patient":
+        sync_patient_to_supabase({
+            "id": user_id,
+            "full_name": resolved_name,
+            "name": resolved_name,
+            "age": req.age,
+            "sex": req.sex,
+            "dob": resolved_dob,
+            "phone": resolved_phone,
+            "mobile_no": resolved_phone,
+            "email": clean_email,
+            "health_issues": resolved_health_issues,
+            "mac_address": resolved_mac,
+            "wallet_address": wallet_address,
+            "policy_id": resolved_policy_id,
+            "policy_commitment": compute_blind_index(resolved_policy_id)
+        })
+
     # 5. Issue Tokens
     access_token = create_access_token({
         "sub": user_id,
@@ -243,8 +309,8 @@ async def register(req: RegisterRequest, response: Response):
             "id": user_id,
             "role": clean_role,
             "name": resolved_name,
-            "email": req.email,
-            "masked_email": mask_email(req.email),
+            "email": clean_email,
+            "masked_email": mask_email(clean_email),
             "wallet_address": wallet_address,
             "profile_pii": pii_payload
         }
@@ -261,8 +327,9 @@ async def login(req: LoginRequest, request: Request, response: Response):
     - Prevents cross-role unauthorized access.
     - Returns Access Token + sets HttpOnly Refresh Token cookie.
     """
+    clean_email = req.email.strip().lower()
     client_ip = request.client.host if request.client else "unknown_ip"
-    rate_limit_key = f"{client_ip}:{req.email.lower()}"
+    rate_limit_key = f"{client_ip}:{clean_email}"
 
     is_locked, remaining_secs = login_rate_limiter.is_rate_limited(rate_limit_key)
     if is_locked:
@@ -272,12 +339,11 @@ async def login(req: LoginRequest, request: Request, response: Response):
         )
 
     # 1. Blind Index Lookup
-    blind_index = compute_blind_index(req.email)
+    blind_index = compute_blind_index(clean_email)
     user_record = get_user_by_blind_index(blind_index)
 
     if not user_record:
         login_rate_limiter.record_failure(rate_limit_key)
-        # Constant-time generic error to prevent email enumeration
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password."

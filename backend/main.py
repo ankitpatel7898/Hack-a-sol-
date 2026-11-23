@@ -11,13 +11,11 @@ import datetime
 from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
 
-load_dotenv()
+# --- Top of backend/main.py (Replace lines 14–66) ---
+load_dotenv(override=True)
 
-# Ensure environment variables exist
-if "SUPABASE_URL" not in os.environ:
-    os.environ["SUPABASE_URL"] = "https://bfrsrxljllwuqmzybrml.supabase.co"
-if "SUPABASE_KEY" not in os.environ:
-    os.environ["SUPABASE_KEY"] = "sb_publishable_PgWgPrfdRdhNOqqSe9XlDg_jDJ9bcdD"
+SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip().strip("<>")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "").strip().strip("<>")
 
 try:
     from supabase import create_client
@@ -64,6 +62,44 @@ except Exception:
     def create_client(url, key):
         return SimpleSupabaseClient(url, key)
 
+# Initialize Supabase Client
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY) if (SUPABASE_URL and SUPABASE_KEY) else None
+
+# Connect to actual table 'patients' in our Supabase schema
+if supabase:
+    try:
+        response = supabase.table("patients").select("*").limit(1).execute()
+        print("Connected to Supabase! Data:", response.data)
+    except Exception as e:
+        print("Supabase connection check:", e)
+else:
+    print("Supabase credentials missing in .env")
+def sync_patient_to_supabase(user_data: Dict[str, Any]):
+    """Upsert patient profile into Supabase public.patients table."""
+    if not supabase or user_data.get("role") != "patient":
+        return
+    try:
+        payload = {
+            "id": user_data.get("id") or user_data.get("user_id"),
+            "full_name": user_data.get("name"),
+            "name": user_data.get("name"),
+            "age": user_data.get("age"),
+            "sex": user_data.get("sex"),
+            "mobile_no": user_data.get("mobile_no"),
+            "phone": user_data.get("mobile_no"),
+            "email": user_data.get("username") if "@" in str(user_data.get("username", "")) else None,
+            "health_issues": user_data.get("health_issues"),
+            "mac_address": user_data.get("mac_address"),
+            "wallet_address": user_data.get("wallet_address"),
+            "policy_id": user_data.get("policy_id"),
+            "policy_commitment": user_data.get("policy_commitment"),
+        }
+        # Remove None values so database defaults (like created_at) apply cleanly
+        clean_payload = {k: v for k, v in payload.items() if v is not None}
+        supabase.table("patients").upsert(clean_payload).execute()
+        print(f"Synced patient {clean_payload.get('id')} to Supabase!")
+    except Exception as e:
+        print(f"Supabase sync warning (saved locally): {e}")
 # Initialize Supabase Client
 supabase = create_client(
     os.environ["SUPABASE_URL"],
@@ -247,7 +283,7 @@ def system_status():
 def register(req: UserRegisterRequest):
     """
     Register a new unique user profile (patient, hospital, insurer).
-    Saves demographic, medical, and hardware MAC anchor in database.
+    Saves demographic, medical, and hardware MAC anchor in database and syncs to Supabase.
     """
     try:
         user = register_user(
@@ -262,6 +298,7 @@ def register(req: UserRegisterRequest):
             mac_address=req.mac_address,
             organization_id=req.organization_id
         )
+        sync_patient_to_supabase(user)
         return {
             "success": True,
             "message": f"Successfully registered {user['role'].capitalize()} account '{user['username']}'!",
@@ -271,7 +308,6 @@ def register(req: UserRegisterRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
-
 
 @app.post("/api/auth/login")
 def login(req: UserLoginRequest):
@@ -992,4 +1028,5 @@ def datetime_now_iso() -> str:
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=True)
+    port = int(os.getenv("PORT", 8001))
+    uvicorn.run("backend.main:app", host="127.0.0.1", port=port, reload=True)
